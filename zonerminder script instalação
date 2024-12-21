@@ -5,7 +5,7 @@ echo "Atualizando pacotes e instalando dependências..."
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y apache2 mysql-server mysql-common software-properties-common php bind9 zoneminder
 
-# Configurando o fuso horário
+# Configurando o fuso horário do sistema
 echo "Configurando o fuso horário para America/Sao_Paulo..."
 sudo timedatectl set-timezone America/Sao_Paulo
 
@@ -13,6 +13,22 @@ sudo timedatectl set-timezone America/Sao_Paulo
 echo "Habilitando e iniciando Apache e MySQL..."
 sudo systemctl enable --now apache2 mysql
 sudo systemctl status apache2 mysql --no-pager -l
+
+# Verificando e ajustando o fuso horário no MySQL
+echo "Verificando o fuso horário atual no MySQL..."
+mysql -uroot -e "SELECT @@global.time_zone, @@session.time_zone;"
+
+echo "Ajustando temporariamente o fuso horário no MySQL..."
+mysql -uroot -e "SET GLOBAL time_zone = '-03:00';"
+mysql -uroot -e "SET SESSION time_zone = '-03:00';"
+
+echo "Ajustando permanentemente o fuso horário no MySQL..."
+sudo sed -i '/\[mysqld\]/a default-time-zone = "-03:00"' /etc/mysql/mysql.conf.d/mysqld.cnf
+sudo systemctl restart mysql
+
+# Carregando tabelas de fuso horário no MySQL (se necessário)
+echo "Carregando tabelas de fuso horário no MySQL..."
+sudo mysql_tzinfo_to_sql /usr/share/zoneinfo | sudo mysql -uroot mysql
 
 # Configurando o MySQL
 echo "Configurando o MySQL..."
@@ -50,6 +66,10 @@ sudo systemctl restart apache2
 echo "Habilitando e iniciando ZoneMinder..."
 sudo systemctl enable zoneminder
 sudo systemctl start zoneminder
+
+# Reiniciando ZoneMinder para aplicar configurações
+echo "Reiniciando ZoneMinder..."
+sudo systemctl restart zoneminder
 
 # Exibindo endereço de acesso
 IP_ADDRESS=$(hostname -I | awk '{print $1}')
