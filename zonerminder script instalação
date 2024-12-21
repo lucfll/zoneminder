@@ -1,10 +1,13 @@
-# https://chatgpt.com/c/676542d2-9230-8003-bd81-2fd779b78d90
 #!/bin/bash
 
 # Atualização e instalação de pacotes
 echo "Atualizando pacotes e instalando dependências..."
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y apache2 mysql-server mysql-common software-properties-common php bind9 zoneminder
+
+# Configurando o fuso horário
+echo "Configurando o fuso horário para America/Sao_Paulo..."
+sudo timedatectl set-timezone America/Sao_Paulo
 
 # Habilitando serviços Apache e MySQL
 echo "Habilitando e iniciando Apache e MySQL..."
@@ -51,4 +54,3 @@ sudo systemctl start zoneminder
 # Exibindo endereço de acesso
 IP_ADDRESS=$(hostname -I | awk '{print $1}')
 echo "Instalação concluída. Acesse ZoneMinder em: http://$IP_ADDRESS/zm"
-
